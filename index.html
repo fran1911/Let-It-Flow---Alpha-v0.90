@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>   
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipe Flow</title>
+  <script src="assets.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+	  -webkit-tap-highlight-color: transparent;  /* ← esto elimina el flash azul */
+    }
+
+    html,
+    body {
+      background: #2C1F14;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e8d5b0;
+    }
+
+    #gr {
+      font-family: 'Courier New', monospace;
+      user-select: none;
+      padding: 16px;
+      position: relative;
+      width: fit-content;
+    }
+
+    #hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 40px;
+    }
+
+    #hdr h2 {
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      color: #e8d5b0;
+    }
+
+    .bdg {
+      font-size: 11px;
+      padding: 2px 10px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 0.5px solid rgba(255, 255, 255, 0.15);
+      color: #c9b48a;
+    }
+
+    #ctrls {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button.b {
+      font-size: 11px;
+      padding: 5px 13px;
+      border-radius: 6px;
+      border: 0.5px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: #e8d5b0;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    button.b:hover {
+      background: rgba(255, 255, 255, 0.13);
+    }
+
+    button.b.p {
+      background: #1D9E75;
+      color: #fff;
+      border-color: #0F6E56;
+    }
+
+    button.b.p:hover {
+      background: #0F6E56;
+    }
+
+    #audio-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 6px;
+    }
+
+    #btn-mute {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      padding: 2px 4px;
+      color: #c9b48a;
+      line-height: 1;
+    }
+
+    #vol-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 70px;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.2);
+      outline: none;
+      cursor: pointer;
+    }
+
+    #vol-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #c9b48a;
+      cursor: pointer;
+    }
+
+    #track-name {
+      font-size: 9px;
+      color: #7a6040;
+      letter-spacing: .5px;
+      max-width: 110px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    #cw {
+      position: relative;
+      display: flex;
+      justify-content: center;
+    }
+
+    canvas {
+      display: block;
+      cursor: pointer;
+	  -webkit-tap-highlight-color: transparent;  /* ← refuerzo */
+	  touch-action: manipulation;                /* ← evita el delay de 300ms en mobile */
+    }
+	
+
+    #msg {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #ffff60;
+      min-height: 16px;
+    }
+
+	#wo {
+	  display: flex;
+	  position: absolute;
+	  top: 0;
+	  left: 0;
+	  width: 100%;
+	  height: 100%;
+	  background: rgba(0, 0, 0, 0.55);
+	  z-index: 10;
+	  align-items: flex-start;
+	  justify-content: center;
+	  opacity: 0;
+	  pointer-events: none;
+	  transition: opacity 0.6s ease;
+	}
+
+	#wo.show {
+	  opacity: 1;
+	  pointer-events: all;
+	}
+
+
+    #wb {
+      background: transparent;
+      border: none;
+      border-radius: 0px;
+      padding: 60px 0px;
+      text-align: center;
+      width: 100%;
+      margin-top: 30px;
+      text-shadow: 0 0 12px #4F4F33, 0 0 25px rgba(66,155,66,0.6);
+    }
+
+    #wb h3 {
+      font-size: 30px;
+      font-weight: 500;
+      color: #FFFF11;
+      letter-spacing: 3px;
+      margin-bottom: 5px;
+    }
+
+    #wb p {
+      font-size: 18px;
+      color: #FFFF11;	  
+      margin-bottom: 14px;
+    }
+
+    #wm {
+      font-size: 28px;
+      font-weight: 500;
+      color: #EFFF80;
+      margin-bottom: 2px;
+    }
+
+    #wl {
+      font-size: 14px;
+      color: #FFFF33;
+      letter-spacing: 2px;
+	  margin-top: 	10px;
+      margin-bottom: 20px;
+    }
+
+    #bn {
+      font-size: 14px;
+      padding: 7px 24px;
+      border-radius: 6px;
+      border: none;
+      background: #AAFE55;
+      color: #1e1208;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      letter-spacing: 1px;
+	  margin-top: 22px;
+    }
+
+    #bn:hover {
+      background: #8AB517;
+    }
+	
+	@media (max-width: 500px) {
+	  #hdr { gap: 6px; flex-wrap: wrap; }
+	  #hdr h2 { font-size: 11px; letter-spacing: 1px; }
+	  .bdg { font-size: 9px; padding: 2px 5px; }
+	  button.b { font-size: 10px; padding: 4px 7px; }
+	  #vol-slider { width: 45px; }
+	  #track-name { max-width: 55px; font-size: 8px; }
+	  #audio-bar { gap: 5px; margin-left: 2px; }
+	}
+  </style>
+</head>
+
+<body>
+  <div id="gr">
+    <div id="hdr">
+      <h2>&#8967; LET IT FLOW!</h2>
+      <div style="display:flex;gap:8px">
+        <span class="bdg" id="mb">Movimientos: 0</span>
+        <span class="bdg" id="lb">Nivel 1</span>
+      </div>
+    </div>
+    <div id="ctrls">
+      <button class="b p" onclick="newGame()">Nuevo Juego</button>
+      <button class="b" onclick="doMoreShuffle()">Desordenar</button>
+      <button class="b" onclick="changeLevel()">siguiente Nivel &rsaquo;</button>
+      <div id="audio-bar">
+        <button id="btn-mute" onclick="toggleMute()">&#128266;</button>
+        <input id="vol-slider" type="range" min="0" max="1" step="0.05" value="0.3" oninput="setVolume(this.value)">
+        <span id="track-name">&mdash; tema? &mdash;</span>
+        <button id="btn-next" class="b" onclick="nextTrack()" title="Next track"
+          style="padding:4px 9px;font-size:13px;">&#9654;&#9654;</button>
+      </div>
+    </div>
+    <div id="cw">
+      <canvas id="c"></canvas>
+      <div id="wo">
+        <div id="wb">
+          <h3>NIVEL COMPLETADO! &#11088;</h3>
+          <div id="wm">0</div>
+          <div id="wl">MOVIMIENTOS</div>
+		  <p>El agua vuelve a su cauce..</p>          
+          <button id="bn" onclick="nextLevel()">SIGUIENTE NIVEL &rsaquo;</button>
+        </div>
+      </div>
+    </div>
+    <div id="msg">Slide tiles adjacent to the empty space.</div>
+  </div>
+
+
+  <script>
+    // ═══════════════════════════════════════════
+    //  TEXTURES — embedded base64
+    // ═══════════════════════════════════════════
+	const IMG = {};
+
+
+     const PIPE_TEX = {
+      'IH': { img: 'pipe_I', boldImg: 'bold_pipe_I', deg: 90 },
+      'IV': { img: 'pipe_I', boldImg: 'bold_pipe_I', deg: 0 },
+
+      'LRT': { img: 'pipe_L', boldImg: 'bold_pipe_L', deg: 0 },
+      'LRB': { img: 'pipe_L', boldImg: 'bold_pipe_L', deg: 90 },
+      'LLB': { img: 'pipe_L', boldImg: 'bold_pipe_L', deg: 180 },
+      'LLT': { img: 'pipe_L', boldImg: 'bold_pipe_L', deg: 270 },
+
+      'TTRL': { img: 'pipe_T', boldImg: 'bold_pipe_T', deg: 0,   boldDegOffset: 180 },
+      'TTRB': { img: 'pipe_T', boldImg: 'bold_pipe_T', deg: 90,  boldDegOffset: 180 },
+      'TRBL': { img: 'pipe_T', boldImg: 'bold_pipe_T', deg: 180, boldDegOffset: 180 },
+      'TTBL': { img: 'pipe_T', boldImg: 'bold_pipe_T', deg: 270, boldDegOffset: 180 },
+
+      'PLUS': { img: 'pipe_PLUS', boldImg: 'bold_pipe_PLUS', deg: 0 },
+    };
+
+
+    let imgsReady = 0;
+    function loadImages(cb) {
+      const keys = Object.keys(IMG_SRCS);
+      keys.forEach(k => {
+        const im = new Image();
+        im.onload = () => { imgsReady++; if (imgsReady >= keys.length) cb(); };
+        im.onerror = () => { imgsReady++; if (imgsReady >= keys.length) cb(); };
+        im.src = IMG_SRCS[k];
+        IMG[k] = im;
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  AUDIO SYSTEM
+    // ═══════════════════════════════════════════════════════════
+    const PLAYLIST = ['tema1.mp3', 'tema2.mp3', 'tema3.mp3', 'tema4.mp3', 'tema5.mp3', 'tema6.mp3', 'tema7.mp3'];
+    let bgAudio = null;
+    let currentTrack = 0;
+    let bgVolume = 0.2;
+    let muted = false;
+    let audioStarted = false;
+
+    const sfxMove = new Audio('move.mp3');
+    sfxMove.volume = 0.28;
+
+    const sfxWin = new Audio('win.mp3');
+    sfxWin.volume = 0.99;
+
+    function initAudio() {
+      if (audioStarted) return;
+      audioStarted = true;
+      playTrack(currentTrack);
+    }
+
+    function playTrack(idx) {
+      if (bgAudio) { bgAudio.pause(); bgAudio.onended = null; }
+      bgAudio = new Audio(PLAYLIST[idx]);
+      bgAudio.volume = muted ? 0 : bgVolume;
+      bgAudio.onended = () => {
+        currentTrack = (currentTrack + 1) % PLAYLIST.length;
+        playTrack(currentTrack);
+      };
+      bgAudio.onerror = () => {
+        currentTrack = (currentTrack + 1) % PLAYLIST.length;
+        setTimeout(() => playTrack(currentTrack), 500);
+      };
+      bgAudio.play().catch(() => { });
+      const name = PLAYLIST[idx].replace(/\.mp3$/i, '');
+      document.getElementById('track-name').textContent = '♪ ' + name;
+    }
+
+    function toggleMute() {
+      muted = !muted;
+      document.getElementById('btn-mute').textContent = muted ? '🔇' : '🔊';
+      if (bgAudio) bgAudio.volume = muted ? 0 : bgVolume;
+      sfxMove.volume = muted ? 0 : 0.55;
+      sfxWin.volume = muted ? 0 : 0.75;
+    }
+
+    function setVolume(val) {
+      bgVolume = parseFloat(val);
+      if (bgAudio && !muted) bgAudio.volume = bgVolume;
+    }
+
+    function nextTrack() {
+      currentTrack = (currentTrack + 1) % PLAYLIST.length;
+      playTrack(currentTrack);
+    }
+
+    function playSfxMove() {
+      if (muted) return;
+      const s = sfxMove.cloneNode();
+      s.volume = muted ? 0 : 0.55;
+      s.play().catch(() => { });
+    }
+
+    function playSfxWin() {
+      if (muted) return;
+      sfxWin.currentTime = 0;
+      sfxWin.play().catch(() => { });
+    }
+
+    document.addEventListener('click', initAudio, { once: true });
+    document.addEventListener('keydown', initAudio, { once: true });
+	window.addEventListener('resize', () => { resizeCv(); render(); });
+
+    // ═══════════════════════════════════════════
+    //  GAME ENGINE
+    // ═══════════════════════════════════════════
+    const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+    let CELL = 68, PW = 13;
+	const GAP = 0, ANIM_MS = 350;
+	const FCOL = '#EF9F27';
+	let MAR, TOP;
+
+	function calcLayout() {
+	  const available = Math.min(window.innerWidth, 900) - 32;
+	  CELL = Math.min(68, Math.floor(available / (N + 3.4)));
+	  PW = Math.round(CELL * 0.19);
+	  const MT = Math.round(CELL * 0.73);
+	  MAR = CELL + MT;
+	  TOP = CELL + MT;
+	}
+
+    const CONNECTS = {
+      'IH': [0, 1, 0, 1], 'IV': [1, 0, 1, 0],
+      'LRB': [0, 1, 1, 0], 'LLB': [0, 0, 1, 1], 'LRT': [1, 1, 0, 0], 'LLT': [1, 0, 0, 1],
+      'TRBL': [0, 1, 1, 1], 'TTRB': [1, 1, 1, 0], 'TTBL': [1, 0, 1, 1], 'TTRL': [1, 1, 0, 1],
+      'PLUS': [1, 1, 1, 1],
+    };
+    const ALL = Object.keys(CONNECTS);
+    const DR = [-1, 0, 1, 0], DC = [0, 1, 0, -1];
+    const opp = d => (d + 2) % 4;
+    const isOpen = (t, d) => CONNECTS[t][d] === 1;
+
+    function findPipe(mask) { const ms = JSON.stringify(mask); return ALL.find(t => JSON.stringify(CONNECTS[t]) === ms) || null; }
+    function findPipeWith(req) { const m = ALL.filter(t => req.every(d => isOpen(t, d))); return m.length ? m[Math.floor(Math.random() * m.length)] : 'PLUS'; }
+
+    let N = 5, level = 1, grid = [], eR = 0, eC = 0, entR, extR, moves = 0;
+    let fPath = null, fAnim = 0, fTimer = null, won = false, acceptingMoves = false;
+
+    const FADE_DUR = 8.0; // duración del fade bold en segundos de animación
+
+    // ─── SLIDE ANIMATION ──────────────────────────────────────
+    let slidingTile = null, animRafId = null;
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+    function startSlideAnim(type, fromR, fromC, toR, toC) {
+      slidingTile = {
+        type,
+        fromX: MAR + fromC * CELL, fromY: TOP + fromR * CELL,
+        toX: MAR + toC * CELL, toY: TOP + toR * CELL,
+        toR, toC,
+        startTime: performance.now(),
+        curX: MAR + fromC * CELL, curY: TOP + fromR * CELL
+      };
+      if (animRafId) cancelAnimationFrame(animRafId);
+      function loop() {
+        const t = Math.min((performance.now() - slidingTile.startTime) / ANIM_MS, 1);
+        const e = easeOut(t);
+        slidingTile.curX = slidingTile.fromX + (slidingTile.toX - slidingTile.fromX) * e;
+        slidingTile.curY = slidingTile.fromY + (slidingTile.toY - slidingTile.fromY) * e;
+        render();
+        if (t < 1) {
+          animRafId = requestAnimationFrame(loop);
+        } else {
+          slidingTile = null; animRafId = null;
+          render();
+          autoCheck();
+        }
+      }
+      animRafId = requestAnimationFrame(loop);
+    }
+
+    // ─── PATH BUILDER ─────────────────────────────────────────
+    function buildPath(sR, sC, eR_, eC_) {
+      for (let a = 0; a < 2000; a++) {
+        const vis = new Set([sR * 1000 + sC]);
+        const path = [{ r: sR, c: sC }];
+        let r = sR, c = sC, ok = false;
+        for (let s = 0; s < N * N * 6; s++) {
+          if (r === eR_ && c === eC_) { ok = true; break; }
+          const dirs = [0, 1, 2, 3].sort(() => Math.random() - .5);
+          let moved = false;
+          for (const d of dirs) {
+            const nr = r + DR[d], nc = c + DC[d];
+            if (nr < 0 || nr >= N || nc < 0 || nc >= N || vis.has(nr * 1000 + nc)) continue;
+            const dn = Math.abs(nr - eR_) + Math.abs(nc - eC_);
+            const dc_ = Math.abs(r - eR_) + Math.abs(c - eC_);
+            if (dn > dc_ && Math.random() < 0.5) continue;
+            vis.add(nr * 1000 + nc); r = nr; c = nc; path.push({ r, c }); moved = true; break;
+          }
+          if (!moved) break;
+        }
+        if (ok) return path;
+      }
+      extR = entR;
+      const path = []; let r = sR, c = sC; path.push({ r, c });
+      while (c < eC_) { c++; path.push({ r, c }); }
+      while (r < eR_) { r++; path.push({ r, c }); }
+      while (r > eR_) { r--; path.push({ r, c }); }
+      return path;
+    }
+
+    function generatePuzzle() {
+      entR = 1 + Math.floor(Math.random() * (N - 2));
+      extR = 1 + Math.floor(Math.random() * (N - 2));
+      const path = buildPath(entR, 0, extR, N - 1);
+      const g = Array.from({ length: N }, () => Array(N).fill(null));
+      for (let i = 0; i < path.length; i++) {
+        const { r, c } = path[i];
+        const req = [];
+        if (i > 0) { const p = path[i - 1]; for (let d = 0; d < 4; d++)if (r + DR[d] === p.r && c + DC[d] === p.c) { req.push(d); break; } }
+        if (i < path.length - 1) { const nx = path[i + 1]; for (let d = 0; d < 4; d++)if (r + DR[d] === nx.r && c + DC[d] === nx.c) { req.push(d); break; } }
+        if (i === 0 && !req.includes(3)) req.push(3);
+        if (i === path.length - 1 && !req.includes(1)) req.push(1);
+        const mask = [0, 0, 0, 0]; req.forEach(d => mask[d] = 1);
+        g[r][c] = findPipe(mask) || findPipeWith(req);
+      }
+
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!g[r][c]) g[r][c] = ALL[Math.floor(Math.random() * ALL.length)];
+      grid = g.map(row => row.map(t => { return { type: t }; }));
+
+      let tries = 0;
+      do { eR = Math.floor(Math.random() * N); eC = Math.floor(Math.random() * N); tries++; }
+      while (tries < 100 && ((eR === entR && eC === 0) || (eR === extR && eC === N - 1)));
+      grid[eR][eC] = null;
+    }
+
+    function doShuffle(n) {
+      for (let i = 0; i < n; i++) {
+        const opts = [];
+        for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) { const nr = eR + dr, nc = eC + dc; if (nr >= 0 && nr < N && nc >= 0 && nc < N) opts.push([nr, nc]); }
+        const [nr, nc] = opts[Math.floor(Math.random() * opts.length)];
+        grid[eR][eC] = grid[nr][nc]; grid[nr][nc] = null; eR = nr; eC = nc;
+      }
+    }
+    function shuffleUntilUnsolved(n) { let a = 0; do { doShuffle(n); a++; } while (a < 20 && traceFlowFull() !== null); }
+
+    function doMoreShuffle() {
+      if (fTimer) { cancelAnimationFrame(fTimer); fTimer = null; }
+      shuffleUntilUnsolved(50);
+      moves = 0;
+      document.getElementById('mb').textContent = 'Moves: 0';
+      fPath = null; slidingTile = null;
+      render();
+    }
+
+    function traceFlowFull() {
+      const t0 = grid[entR] && grid[entR][0];
+      if (!t0 || !isOpen(t0.type, 3)) return null;
+      const parent = new Map();
+      const queue = [{ r: entR, c: 0, fromDir: 3 }];
+      const visited = new Set([entR * 1000 + 0]);
+      parent.set(entR * 1000 + 0, null);
+      while (queue.length) {
+        const { r, c, fromDir } = queue.shift();
+        const tile = grid[r][c]; if (!tile) continue;
+        for (let d = 0; d < 4; d++) {
+          if (d === fromDir || !isOpen(tile.type, d)) continue;
+          if (d === 1 && c === N - 1 && r === extR) {
+            const path = []; let k = r * 1000 + c;
+            while (k !== null) { path.unshift({ r: Math.floor(k / 1000), c: k % 1000 }); k = parent.get(k); }
+            return path;
+          }
+          const nr = r + DR[d], nc = c + DC[d];
+          if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
+          const key = nr * 1000 + nc;
+          if (visited.has(key)) continue;
+          const nt = grid[nr][nc]; if (!nt || !isOpen(nt.type, opp(d))) continue;
+          visited.add(key); parent.set(key, r * 1000 + c); queue.push({ r: nr, c: nc, fromDir: opp(d) });
+        }
+      }
+      return null;
+    }
+
+    function newGame() {
+      acceptingMoves = false; won = false; moves = 0; fPath = null; fAnim = 0; slidingTile = null;
+      if (fTimer) { cancelAnimationFrame(fTimer); fTimer = null; }
+      if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+      document.getElementById('wo').classList.remove('show');
+      document.getElementById('mb').textContent = 'Movimientos: 0';
+      generatePuzzle(); shuffleUntilUnsolved(30 + level * 15);
+      render();
+      document.getElementById('msg').textContent = '*Desliza un bloque a una casilla adyacente vacia.';
+      acceptingMoves = true;
+    }
+    function changeLevel() { level = (level % 3) + 1; N = level === 1 ? 5 : level === 2 ? 6 : 7; document.getElementById('lb').textContent = 'Level ' + level; resizeCv(); newGame(); }
+    function nextLevel() { changeLevel(); }
+	
+    //function resizeCv() { cv.width = N * CELL + MAR * 2; cv.height = N * CELL + TOP * 2; }
+	function resizeCv() {
+	  calcLayout();
+	  cv.width = N * CELL + MAR * 2;
+	  cv.height = N * CELL + TOP * 2;
+	}
+	
+    function tryMove(r, c) {
+      if (Math.abs(r - eR) + Math.abs(c - eC) !== 1) return false;
+      const tileType = grid[r][c].type;
+      const fromR = r, fromC = c;
+      const toR = eR, toC = eC;
+      grid[toR][toC] = grid[fromR][fromC];
+      grid[fromR][fromC] = null;
+      eR = fromR; eC = fromC;
+      moves++;
+      document.getElementById('mb').textContent = 'Movimientos: ' + moves;
+      playSfxMove();
+      startSlideAnim(tileType, fromR, fromC, toR, toC);
+      return true;
+    }
+
+    function autoCheck() {
+      if (!acceptingMoves || won || fTimer || slidingTile) return;
+      const path = traceFlowFull();
+      if (path && path.length > 0) {
+        fPath = path; fAnim = 0;
+        let lastTime = null;
+        const SPEED = 1000 / 75;
+        function flowLoop(ts) {
+          if (!lastTime) lastTime = ts;
+          fAnim += SPEED * (ts - lastTime) / 1000;
+          lastTime = ts;
+          render();
+          if (fAnim < fPath.length + FADE_DUR + 2) {
+            fTimer = requestAnimationFrame(flowLoop);
+          } else {
+            fTimer = null;
+            if (!won) { won = true; playSfxWin(); setTimeout(() => { document.getElementById('wm').textContent = moves; document.getElementById('wo').classList.add('show'); }, 999); }
+          }
+        }
+        fTimer = requestAnimationFrame(flowLoop);
+        document.getElementById('msg').innerHTML = '&#128167; Conexion con exito!';
+      }
+    }
+
+    cv.addEventListener('click', e => {
+      if (!acceptingMoves || won || animRafId) return;
+      const rect = cv.getBoundingClientRect();
+      const col = Math.floor((e.clientX - rect.left - MAR) / CELL);
+      const row = Math.floor((e.clientY - rect.top - TOP) / CELL);
+      if (row < 0 || row >= N || col < 0 || col >= N) return;
+      if (tryMove(row, col)) {
+        if (fTimer) { cancelAnimationFrame(fTimer); fTimer = null; }
+        fPath = null;
+      }
+    });
+
+    // ═══════════════════════════════════════════
+    //  RENDER
+    // ═══════════════════════════════════════════
+    function render() {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+
+      const bgImg = IMG['frame_bg'];
+      if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+        ctx.drawImage(bgImg, 0, 0, cv.width, cv.height);
+      }
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(MAR, TOP, N * CELL, N * CELL);
+		
+	  //marco color plano   rgba(10,155,133)'
+      ctx.save();
+      ctx.strokeStyle = 'rgba(5, 178, 95)';
+      ctx.lineWidth = 8;
+      ctx.setLineDash([]);
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.99)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetX = 6;
+      ctx.shadowOffsetY = 6;
+      ctx.beginPath();
+      ctx.roundRect(MAR - 5, TOP - 5, N * CELL + 10, N * CELL + 10, 6);
+      ctx.stroke();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.99)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetX = -6;
+      ctx.shadowOffsetY = -6;
+      ctx.beginPath();
+      ctx.roundRect(MAR - 5, TOP - 5, N * CELL + 10, N * CELL + 10, 6);
+      ctx.stroke();
+      ctx.restore();
+
+      drawConnectorBlock(MAR - CELL, TOP + entR * CELL, 'IN', fPath && fAnim > 0);
+      drawConnectorBlock(MAR + N * CELL, TOP + extR * CELL, 'OUT', fPath && fAnim >= (fPath ? fPath.length : 999));
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, cv.width, cv.height);
+      ctx.roundRect(MAR - 5, TOP - 5, N * CELL + 10, N * CELL + 10, 6);
+      ctx.clip('evenodd');
+      ctx.strokeStyle = 'rgba(5, 178, 95)';
+      ctx.lineWidth = 8;
+      ctx.setLineDash([]);
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.60)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetX = -6;
+      ctx.shadowOffsetY = -6;
+      ctx.beginPath();
+      ctx.roundRect(MAR - CELL - 5, TOP + entR * CELL - 5, CELL + 10, CELL + 10, 6);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, cv.width, cv.height);
+      ctx.roundRect(MAR - 5, TOP - 5, N * CELL + 10, N * CELL + 10, 6);
+      ctx.clip('evenodd');
+      ctx.strokeStyle = 'rgba(5, 178, 95)';
+      ctx.lineWidth = 8;
+      ctx.setLineDash([]);
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.60)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetX = 6;
+      ctx.shadowOffsetY = 6;
+      ctx.beginPath();
+      ctx.roundRect(MAR + N * CELL - 5, TOP + extR * CELL - 5, CELL + 10, CELL + 10, 6);
+      ctx.stroke();
+      ctx.restore();
+
+      // Tiles
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+        const x = MAR + c * CELL, y = TOP + r * CELL, tile = grid[r][c];
+        if (!tile) {
+          ctx.fillStyle = 'rgba(0, 2, 0, 0.6)';
+          ctx.fillRect(x + GAP, y + GAP, CELL - GAP * 2, CELL - GAP * 2);
+          ctx.strokeStyle = 'rgba(239,159,39,0.15)';
+          ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+          ctx.strokeRect(x + GAP + 0.5, y + GAP + 0.5, CELL - GAP * 2 - 1, CELL - GAP * 2 - 1);
+          ctx.setLineDash([]);
+          continue;
+        }
+        if (slidingTile && r === slidingTile.toR && c === slidingTile.toC) continue;
+
+        const fi = fPath ? fPath.findIndex(p => p.r === r && p.c === c) : -1;
+        const lit = fPath && fi >= 0 && fi < fAnim;
+        const fadeOpacity = lit ? Math.min((fAnim - fi) / FADE_DUR, 1) : 1;
+        drawTexTile(x, y, tile.type, lit, fadeOpacity);
+      }
+
+      if (slidingTile) {
+        const { type, curX, curY } = slidingTile;
+        drawTexTile(curX, curY, type, false, 1);
+      }
+    }
+
+    // ─── Draw one textured tile at pixel position (x,y) ───────
+    function drawTexTile(x, y, type, lit, fadeOpacity = 1) {
+      const tex = PIPE_TEX[type];
+      if (tex) {
+        const normalImg = IMG[tex.img];
+        const hasNormal = normalImg && normalImg.complete && normalImg.naturalWidth > 0;
+        if (hasNormal) {
+          // Siempre dibuja el tile normal
+          const rad = tex.deg * Math.PI / 180;
+          ctx.save();
+          ctx.translate(x + CELL / 2, y + CELL / 2);
+          ctx.rotate(rad);
+          ctx.drawImage(normalImg, -CELL / 2 + GAP, -CELL / 2 + GAP, CELL - GAP * 2, CELL - GAP * 2);
+          ctx.restore();
+          // Encima, el bold con fade-in suave
+          if (lit && fadeOpacity > 0 && tex.boldImg) {
+            const boldImg = IMG[tex.boldImg];
+            if (boldImg && boldImg.complete && boldImg.naturalWidth > 0) {
+              const degOffset = tex.boldDegOffset || 0;
+              const rad2 = (tex.deg + degOffset) * Math.PI / 180;
+              ctx.save();
+              ctx.globalAlpha = fadeOpacity;
+              ctx.translate(x + CELL / 2, y + CELL / 2);
+              ctx.rotate(rad2);
+              ctx.drawImage(boldImg, -CELL / 2 + GAP, -CELL / 2 + GAP, CELL - GAP * 2, CELL - GAP * 2);
+              ctx.restore();
+            }
+          }
+          return;
+        }
+      }
+      // Fallback vectorial
+      ctx.fillStyle = lit ? '#1a3d2b' : '#3C3489';
+      ctx.fillRect(x + GAP, y + GAP, CELL - GAP * 2, CELL - GAP * 2);
+      const m = CONNECTS[type];
+      const cx = x + CELL / 2, cy = y + CELL / 2;
+      ctx.strokeStyle = lit ? FCOL : '#AFA9EC'; ctx.lineWidth = PW; ctx.lineCap = 'round';
+      if (m[0]) { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, y); ctx.stroke(); }
+      if (m[1]) { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x + CELL, cy); ctx.stroke(); }
+      if (m[2]) { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, y + CELL); ctx.stroke(); }
+      if (m[3]) { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, cy); ctx.stroke(); }
+      ctx.fillStyle = lit ? FCOL : '#AFA9EC'; ctx.beginPath(); ctx.arc(cx, cy, PW / 2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // ─── IN/OUT connector block ────────────────────────────────
+    function drawConnectorBlock(x, y, label, lit) {
+      const isIN = label === 'IN';
+      const imgKey = (isIN || lit) ? 'pipe_IN' : 'pipe_OUT';
+      const img = IMG[imgKey];
+      const deg = isIN ? 90 : 270;
+      const rad = deg * Math.PI / 180;
+
+      if (img && img.complete && img.naturalWidth > 0) {
+        ctx.save();
+        ctx.translate(x + CELL / 2, y + CELL / 2);
+        ctx.rotate(rad);
+        ctx.drawImage(img, -CELL / 2 + GAP, -CELL / 2 + GAP, CELL - GAP * 2, CELL - GAP * 2);
+        ctx.restore();
+        return;
+      }
+
+      // Fallback vectorial
+      ctx.fillStyle = lit ? 'rgba(239,159,39,0.2)' : 'rgba(30,20,10,0.85)';
+      ctx.fillRect(x + GAP, y + GAP, CELL - GAP * 2, CELL - GAP * 2);
+      ctx.strokeStyle = lit ? '#EF9F27' : 'rgba(120,90,60,0.5)';
+      ctx.lineWidth = lit ? 2 : 1; ctx.setLineDash([]);
+      ctx.strokeRect(x + GAP, y + GAP, CELL - GAP * 2, CELL - GAP * 2);
+      const cy = y + CELL / 2;
+      ctx.strokeStyle = lit ? FCOL : '#1D9E75';
+      ctx.lineWidth = PW; ctx.lineCap = 'round';
+      if (isIN) {
+        ctx.beginPath(); ctx.moveTo(x + CELL / 4, cy); ctx.lineTo(x + CELL, cy); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.moveTo(x, cy); ctx.lineTo(x + CELL * 3 / 4, cy); ctx.stroke();
+      }
+      const lw = isIN ? 22 : 30, lh = 16;
+      ctx.fillStyle = '#854F0B';
+      ctx.beginPath(); ctx.roundRect(x + CELL / 2 - lw / 2, cy - lh / 2, lw, lh, 4); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Courier New';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(label, x + CELL / 2, cy);
+    }
+
+    // ─── INIT ─────────────────────────────────────────────────
+    resizeCv();
+    loadImages(() => { newGame(); });
+  </script>
+</body>
+
+</html>
