@@ -526,22 +526,11 @@
 
 	function calcLayout() {
 	  const available = Math.min(window.innerWidth, 900) - 32;
-
-	  // Tamaño de celda fijo basado en max tier (7 cols)
-	  const CELL_MAX = Math.min(68, Math.floor(available / (MAX_COLS + 3.4)));
-	  const MT_MAX   = Math.round(CELL_MAX * 0.73);
-
-	  // Canvas fijo — nunca cambia
-	  CV_W = MAX_COLS * CELL_MAX + (CELL_MAX + MT_MAX) * 2;
-	  CV_H = MAX_ROWS * CELL_MAX + (CELL_MAX + MT_MAX) * 2;
-
-	  // Celda de la grilla activa (puede ser más grande en tiers chicos)
-	  CELL = Math.min(CELL_MAX, Math.floor(available / (Math.max(ROWS, COLS) + 3.4)));
-	  PW   = Math.round(CELL * 0.19);
-
-	  // Centrar la grilla dentro del canvas fijo
-	  MAR = Math.round((CV_W - COLS * CELL) / 2);
-	  TOP = Math.round((CV_H - ROWS * CELL) / 2);
+	  CELL = Math.min(68, Math.floor(available / (Math.max(ROWS, COLS) + 3.4)));
+	  PW = Math.round(CELL * 0.19);
+	  const MT = Math.round(CELL * 0.73);
+	  MAR = CELL + MT;
+	  TOP = CELL + MT;
 	}
 
     const CONNECTS = {
@@ -572,12 +561,9 @@
 	  { rows: 10, cols: 7  }, // Tier 8
 	  { rows: 12, cols: 7 }, // Tier 9
 	];
-	let ROWS = 4, COLS = 3;
+	let ROWS = 3, COLS = 4;
 	let level = 1, grid = [], eR = 0, eC = 0, entR, extR, moves = 0;
-	// ─── Tamaño fijo del canvas (siempre tier máximo) ─────────
-	const MAX_ROWS = 12, MAX_COLS = 7;
-	let CV_W = 0, CV_H = 0;
-		
+	
     let fPath = null, fAnim = 0, fTimer = null, won = false, acceptingMoves = false;
 	let pathLength = 0;
 	
@@ -807,8 +793,8 @@
     //function resizeCv() { cv.width = N * CELL + MAR * 2; cv.height = N * CELL + TOP * 2; }
 	function resizeCv() {
 	  calcLayout();
-	  cv.width  = CV_W;
-	  cv.height = CV_H;
+	  cv.width = COLS * CELL + MAR * 2;
+	  cv.height = ROWS * CELL + TOP * 2;
 	}
 	
     function tryMove(r, c) {
@@ -1086,7 +1072,11 @@
       document.getElementById('welcome-overlay').classList.add('hidden');
       initAudio();
     }
-   
+
+    // ─── INIT ─────────────────────────────────────────────────
+    resizeCv();
+    loadImages(() => { newGame(); });
+
     // ─── INIT ─────────────────────────────────────────────────
     resizeCv();
     loadImages(() => { newGame(); });
