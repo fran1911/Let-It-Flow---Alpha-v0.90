@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>  	
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script src="assets.js"></script>
+  <title>Let it Flow</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {     
+	  background: #2C1F14;
+	  min-height: 100vh;
+	  height: 100%;
+	  margin: 0;
+	  padding: 0;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  color: #e8d5b0;
+	  position: relative;
+	  overflow-x: hidden;
+    }
+
+    #gr {
+      font-family: 'Courier New', monospace;
+	  user-select: none;
+	  padding: 0px 2px;
+	  position: relative;
+	  width: 60%;
+	  height: 100%;
+	  max-width: 50vw;
+	  aspect-ratio: 2 / 1;
+	  margin: auto;
+	  display: flex;
+	  flex-direction: column;
+	  justify-content: space-between;
+	  
+	  /* Borde negro */	   
+	  border: 2px solid #000;
+	  border-radius: 8px;
+	  box-sizing: border-box;
+	  background: rgba(0, 0, 0, 0.2); /* opcional: fondo tenue */	  
+    }
+
+    #hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: clamp(8px, 2vw, 10px);
+      gap: clamp(8px, 4vw, 40px);
+      flex-wrap: wrap;
+    }
+
+    #hdr h2 {
+      font-size: clamp(11px, 4vw, 14px);
+      font-weight: 500;
+      letter-spacing: clamp(1px, 2vw, 3px);
+      color: #e8d5b0;
+    }
+
+    .bdg {
+      font-size: clamp(9px, 3.5vw, 11px);
+      padding: clamp(2px, 1.5vw, 2px) clamp(5px, 3vw, 10px);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 0.5px solid rgba(255, 255, 255, 0.15);
+      color: #c9b48a;
+      white-space: nowrap;
+    }
+
+    #ctrls {
+      display: flex;
+      gap: clamp(4px, 2vw, 6px);
+      margin-bottom: clamp(8px, 2vw, 10px);
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button.b {
+      font-size: clamp(10px, 3.5vw, 11px);
+      padding: clamp(4px, 2vw, 5px) clamp(8px, 3vw, 13px);
+      border-radius: 6px;
+      border: 0.5px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: #e8d5b0;
+      cursor: pointer;
+      transition: background .15s, transform 0.1s;
+      touch-action: manipulation;
+    }
+
+    button.b:active {
+      transform: scale(0.96);
+    }
+
+    button.b:hover {
+      background: rgba(255, 255, 255, 0.13);
+    }
+
+    button.b.p {
+      background: #1D9E75;
+      color: #fff;
+      border-color: #0F6E56;
+    }
+
+    button.b.p:active {
+      background: #0F6E56;
+      transform: scale(0.96);
+    }
+
+    #audio-bar {
+      display: flex;
+      align-items: center;
+      gap: clamp(4px, 2vw, 8px);
+      margin-left: clamp(2px, 1vw, 6px);
+      flex-wrap: wrap;
+    }
+
+    #btn-mute {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: clamp(13px, 5vw, 15px);
+      padding: 2px 4px;
+      color: #c9b48a;
+      line-height: 1;
+      touch-action: manipulation;
+    }
+
+    #vol-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: clamp(50px, 20vw, 70px);
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.2);
+      outline: none;
+      cursor: pointer;
+    }
+
+    #vol-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: clamp(10px, 4vw, 12px);
+      height: clamp(10px, 4vw, 12px);
+      border-radius: 50%;
+      background: #c9b48a;
+      cursor: pointer;
+    }
+
+    #track-name {
+      font-size: clamp(8px, 3vw, 9px);
+      color: #7a6040;
+      letter-spacing: .5px;
+      max-width: clamp(60px, 25vw, 110px);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    #cw {
+	  position: relative;
+	  display: flex;
+	  justify-content: center;
+	  align-items: center;
+	  width: 100%;
+	  flex: 1;
+	  min-height: 0;
+	}
+	
+    canvas {
+	  display: block;
+	  cursor: pointer;
+	  -webkit-tap-highlight-color: transparent;
+	  touch-action: none;
+	  max-width: 100%;
+	  max-height: 100%;
+	  width: auto;
+	  height: auto;
+	  object-fit: contain;
+	}
+
+	#msg {
+      text-align: center;
+      margin-top: clamp(6px, 2vw, 8px);
+      font-size: clamp(10px, 3.5vw, 11px);
+      color: #ffff60;
+      min-height: 16px;
+      padding: 0 10px;
+    }
+
+    #wo {
+      display: flex;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    #wo.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #wb {
+      background: rgba(26, 17, 10, 0.95);
+      border: 1px solid rgba(115, 198, 140, 0.4);
+      border-radius: clamp(12px, 4vw, 12px);
+      padding: clamp(20px, 6vw, 36px) clamp(20px, 6vw, 32px);
+      text-align: center;
+      max-width: min(90vw, 320px);
+      box-shadow: 0 0 40px rgba(5, 198, 122, 0.15);
+      margin: 20px;
+    }
+
+    #wb h3 {
+      font-size: clamp(20px, 6vw, 30px);
+      font-weight: 500;
+      color: #FFFF11;
+      letter-spacing: 2px;
+      margin-bottom: 5px;
+    }
+
+    #wb p {
+      font-size: clamp(12px, 4vw, 14px);
+      color: #AABB11;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    #wm, #wp {
+      font-size: clamp(18px, 5vw, 20px);
+      font-weight: 500;
+      color: #EFEFAA;
+    }
+
+    #wl, #wpl {
+      font-size: clamp(14px, 4.5vw, 16px);
+      color: #FFFF33;
+      letter-spacing: 1px;
+      margin-top: 8px;
+      margin-bottom: 10px;
+    }
+
+    #wzen {
+      font-size: clamp(16px, 5vw, 18px);
+      color: #EEFE55;
+      letter-spacing: 2px;
+      margin-top: 10px;
+    }
+
+    #bn {
+      font-size: clamp(12px, 4vw, 14px);
+      padding: clamp(6px, 2vw, 7px) clamp(16px, 6vw, 24px);
+      border-radius: 6px;
+      border: none;
+      background: #AAFE55;
+      color: #1e1208;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-top: 22px;
+      touch-action: manipulation;
+    }
+
+    #bn:active {
+      transform: scale(0.96);
+      background: #8AB517;
+    }
+
+    #welcome-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    #welcome-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #welcome-box {
+      background: #1a110a;
+      border: 1px solid rgba(5, 198, 122, 0.4);
+      border-radius: clamp(12px, 4vw, 12px);
+      padding: clamp(20px, 6vw, 36px) clamp(20px, 6vw, 32px);
+      text-align: center;
+      max-width: min(90vw, 320px);
+      box-shadow: 0 0 40px rgba(5, 198, 122, 0.15);
+      margin: 20px;
+    }
+
+    #welcome-box h3 {
+      font-size: clamp(22px, 7vw, 28px);
+      color: #BBBB11;
+      letter-spacing: 2px;
+      margin-bottom: 18px;
+      text-shadow: 0 0 12px rgba(66, 155, 66, 0.6);
+    }
+
+    #welcome-box p {
+      font-size: clamp(12px, 4vw, 13px);
+      color: #c9b48a;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    #btn-start {
+      font-size: clamp(16px, 5vw, 20px);
+      padding: clamp(8px, 3vw, 9px) clamp(20px, 8vw, 28px);
+      border-radius: 6px;
+      border: none;
+      background: #AAFE55;
+      color: #1e1208;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      letter-spacing: 1px;
+      touch-action: manipulation;
+    }
+
+    #btn-start:active {
+      transform: scale(0.96);
+      background: #8AB517;
+    }
+
+    #zen-display {
+      position: absolute;
+      top: clamp(10px, 3vw, 20px);
+      right: clamp(10px, 3vw, 20px);
+      font-size: clamp(14px, 5vw, 18px);
+      font-family: 'Quicksand', sans-serif;
+      color: #EEFE55;
+      background: rgba(0, 0, 0, 0.60);
+      border: 2px solid rgb(5, 55, 25);
+      border-radius: 8px;
+      padding: clamp(2px, 1.5vw, 3px) clamp(6px, 3vw, 10px);
+      letter-spacing: 1px;
+      z-index: 5;
+      backdrop-filter: blur(2px);
+    }
+
+    .version-tag {
+      position: fixed;
+      bottom: clamp(8px, 2vw, 26px);
+      left: clamp(8px, 2vw, 24px);
+      font-size: clamp(9px, 3vw, 12px);
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 1px;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    @media (orientation: landscape) and (max-height: 600px) {
+      #gr {
+        padding: 4px;
+      }
+      canvas {
+        max-height: 55vh;
+      }
+      .version-tag {
+        display: none;
+      }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      button.b:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      button.b:active {
+        background: rgba(255, 255, 255, 0.13);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="gr">
+    <div id="hdr">
+      <h2>&#8967; LET IT FLOW!</h2>
+      <div style="display:flex;gap:8px">
+        <span class="bdg" id="mb">Movimientos: 0</span>
+        <span class="bdg" id="lb">Nivel 1</span>
+      </div>
+    </div>
+    <div id="ctrls">
+      <button class="b p" id="btn-newgame">Nuevo Juego</button>
+      <button class="b" id="btn-shuffle">Desordenar</button>
+      <button class="b" id="btn-nextlevel">siguiente Nivel &rsaquo;</button>
+      <div id="audio-bar">
+        <button id="btn-mute">&#128266;</button>
+        <input id="vol-slider" type="range" min="0" max="1" step="0.05" value="0.3">
+        <span id="track-name">&mdash; tema? &mdash;</span>
+        <button id="btn-next" class="b" style="padding:4px 9px;font-size:13px;">&#9654;&#9654;</button>
+      </div>
+    </div>
+    <div id="cw">	  
+      <canvas id="c"></canvas>	  
+      <div id="zen-display">&#128142 0</div>	  	  
+      <div id="wo">
+        <div id="wb">		
+          <h3>NIVEL COMPLETADO! &#11088;</h3>
+          <div id="wl">MOVIMIENTOS: <span id="wm">0</span></div>		      
+          <div id="wpl">RECORRIDO: <span id="wp">0</span></div>  
+          <div id="wzen"></div> 
+          <p>El agua vuelve a su cauce..</p>          
+          <button id="bn">SIGUIENTE NIVEL &rsaquo;</button>
+        </div>
+      </div>
+    </div>
+    <div class="version-tag">v0.94</div>
+    <div id="msg">👆 Toca un bloque y desliza hacia el espacio vacío</div>
+    
+    <div id="welcome-overlay">
+      <div id="welcome-box">
+        <h3>&#128075&#128522 HOLA!</h3>
+        <p>Tu meta es hacer que el agua continúe su cauce, moviendo la menor cantidad de veces posible los bloques.<br>¡TOMATELO CON CALMA! NO HAY LIMITE DE TIEMPO.</p>
+        <button id="btn-start">COMENZAR</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════
+    //  TEXTURES — embedded base64
+    // ═══════════════════════════════════════════
+   
+    const IMG = {};
+    let imgsReady = 0;
+
+    function loadImages(cb) {
+      const keys = Object.keys(IMG_SRCS);
+      keys.forEach(k => {
+        const im = new Image();
+        im.onload = () => { imgsReady++; if (imgsReady >= keys.length) cb(); };
+        im.onerror = () => { imgsReady++; if (imgsReady >= keys.length) cb(); };
+        im.src = IMG_SRCS[k];
+        IMG[k] = im;
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  AUDIO SYSTEM
+    // ═══════════════════════════════════════════════════════════
+    const PLAYLIST = ['tema1.mp3', 'tema2.mp3', 'tema3.mp3', 'tema4.mp3', 'tema5.mp3', 'tema6.mp3', 'tema7.mp3'];
+    let bgAudio = null;
+    let currentTrack = 0;
+    let bgVolume = 0.2;
+    let muted = false;
+    let audioStarted = false;
+
+    const sfxMove = new Audio('move.mp3');
+    sfxMove.volume = 0.28;
+
+    const sfxWin = new Audio('win.mp3');
+    sfxWin.volume = 0.99;
+
+    function initAudio() {
+      if (audioStarted) return;
+      audioStarted = true;
+      playTrack(currentTrack);
+    }
+
+    function playTrack(idx) {
+      if (bgAudio) { bgAudio.pause(); bgAudio.onended = null; }
+      bgAudio = new Audio(PLAYLIST[idx]);
+      bgAudio.volume = muted ? 0 : bgVolume;
+      bgAudio.onended = () => {
+        currentTrack = (currentTrack + 1) % PLAYLIST.length;
+        playTrack(currentTrack);
+      };
+      bgAudio.onerror = () => {
+        currentTrack = (currentTrack + 1) % PLAYLIST.length;
+        setTimeout(() => playTrack(currentTrack), 500);
+      };
+      bgAudio.play().catch(() => { });
+      const name = PLAYLIST[idx].replace(/\.mp3$/i, '');
+      document.getElementById('track-name').textContent = '♪ ' + name;
+    }
+
+    function toggleMute() {
+      muted = !muted;
+      document.getElementById('btn-mute').textContent = muted ? '🔇' : '🔊';
+      if (bgAudio) bgAudio.volume = muted ? 0 : bgVolume;
+      sfxMove.volume = muted ? 0 : 0.55;
+      sfxWin.volume = muted ? 0 : 0.75;
+    }
+
+    function setVolume(val) {
+      bgVolume = parseFloat(val);
+      if (bgAudio && !muted) bgAudio.volume = bgVolume;
+    }
+
+    function nextTrack() {
+      currentTrack = (currentTrack + 1) % PLAYLIST.length;
+      playTrack(currentTrack);
+    }
+
+    function playSfxMove() {
+      if (muted) return;
+      const s = sfxMove.cloneNode();
+      s.volume = muted ? 0 : 0.55;
+      s.play().catch(() => { });
+    }
+
+    function playSfxWin() {
+      if (muted) return;
+      sfxWin.currentTime = 0;
+      sfxWin.play().catch(() => { });
+    }
+    
+	window.addEventListener('resize', () => { resizeCv(); render(); });
+	
+	function closeWelcome() {
+	  document.getElementById('welcome-overlay').classList.add('hidden');
+	  
+	  // Iniciar audio con contexto de usuario (esto es clave)
+	  if (!audioStarted) {
+		audioStarted = true;
+		playTrack(currentTrack);
+	  }
+	}
+
+    // ═══════════════════════════════════════════
+    //  GAME ENGINE
+    // ═══════════════════════════════════════════
+    const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+    let CELL = 68, PW = 13;
+    const GAP = 0, ANIM_MS = 350;
+    const FCOL = '#EF9F27';
+    let MAR, TOP;
+
+    const PIPE_TEX = {
+      'IH': { img: 'pipe_I', boldImg: 'bold_pipe_I', deg: 90 },
+      'IV': { img: 'pipe_I', boldImg: 'bold_pipe_I', deg: 0 },
+      'LRT': { img: 'pipe_L', boldImg: 'bold_pipe_L', deg: 0 },
+      'LRB': { img: 'pipe_L', boldImg: 'bold_pipe_L', deg: 90 },
+      'LLB': { img: 'pipe_L', boldImg: 'bold_pipe_L', deg: 180 },
+      'LLT': { img: 'pipe_L', boldImg: 'bold_pipe_L', deg: 270 },
+      'TTRL': { img: 'pipe_T', boldImg: 'bold_pipe_T', deg: 0, boldDegOffset: 180 },
+      'TTRB': { img: 'pipe_T', boldImg: 'bold_pipe_T', deg: 90, boldDegOffset: 180 },
+      'TRBL': { img: 'pipe_T', boldImg: 'bold_pipe_T', deg: 180, boldDegOffset: 180 },
+      'TTBL': { img: 'pipe_T', boldImg: 'bold_pipe_T', deg: 270, boldDegOffset: 180 },
+      'PLUS': { img: 'pipe_PLUS', boldImg: 'bold_pipe_PLUS', deg: 0 },
+      'pipe_O': { img: 'pipe_O', boldImg: null, deg: 0 },
+    };
+
+    const CONNECTS = {
+      'IH': [0, 1, 0, 1], 'IV': [1, 0, 1, 0],
+      'LRB': [0, 1, 1, 0], 'LLB': [0, 0, 1, 1], 'LRT': [1, 1, 0, 0], 'LLT': [1, 0, 0, 1],
+      'TRBL': [0, 1, 1, 1], 'TTRB': [1, 1, 1, 0], 'TTBL': [1, 0, 1, 1], 'TTRL': [1, 1, 0, 1],
+      'PLUS': [1, 1, 1, 1], 'pipe_O': [0, 0, 0, 0],
+    };
+    const ALL = Object.keys(CONNECTS).filter(k => k !== 'pipe_O');
+    const DR = [-1, 0, 1, 0], DC = [0, 1, 0, -1];
+    const opp = d => (d + 2) % 4;
+    const isOpen = (t, d) => CONNECTS[t][d] === 1;
+
+    function findPipe(mask) { const ms = JSON.stringify(mask); return ALL.find(t => JSON.stringify(CONNECTS[t]) === ms) || null; }
+    function findPipeWith(req) { const m = ALL.filter(t => req.every(d => isOpen(t, d))); return m.length ? m[Math.floor(Math.random() * m.length)] : 'PLUS'; }
+
+    const LEVELS_PER_TIER = 5;
+    const TIERS = [
+      { rows: 4, cols: 3 }, { rows: 4, cols: 4 }, { rows: 5, cols: 4 },
+      { rows: 5, cols: 5 }, { rows: 6, cols: 6 }, { rows: 8, cols: 6 },
+      { rows: 10, cols: 6 }, { rows: 10, cols: 7 }, { rows: 12, cols: 7 },
+    ];
+    let ROWS = 4, COLS = 3;
+    let level = 1, grid = [], eR = 0, eC = 0, entR, extR, moves = 0;
+    let fPath = null, fAnim = 0, fTimer = null, won = false, acceptingMoves = false;
+    let pathLength = 0;
+    const FADE_DUR = 8.0;
+    const PIPE_O_ENABLED = false;
+    let zen = 0;
+    let pendingZen = 0;
+    let difficulty = 0.5;
+    let slidingTile = null, animRafId = null;
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+    function calcZen() {
+      return Math.round(1000 / ((moves / difficulty) + (pathLength / difficulty)));
+    }
+	
+	function positionZen() {
+	  const cw_el = document.getElementById('cw');
+	  const zenEl = document.getElementById('zen-display');
+
+	  const cvH = parseFloat(cv.style.height);
+	  const cvW = parseFloat(cv.style.width);
+	  const scale = cvW / cv.width;
+
+	  // El canvas está centrado en #cw verticalmente
+	  const vertOffset = (cw_el.clientHeight - cvH) / 2;
+	  const topMarginPx = TOP * scale;
+
+	  // Centra el badge verticalmente dentro del margen superior
+	  zenEl.style.top   = Math.floor(vertOffset + topMarginPx / 4 + 6) + 'px';
+	  zenEl.style.right = '33px';
+	}
+	
+	function calcLayout() {
+	  const gr = document.getElementById('gr');
+	  const cw_el = document.getElementById('cw');
+	  
+	  const availW = gr.clientWidth;          // padding horizontal 16px × 2
+	  const availH = cw_el.clientHeight - 80;     // 50px arriba + 50px abajo
+
+	  // CELL que llena exactamente: cv.width = CELL × (COLS + 2 × 1.73)
+	  const cellByWidth  = Math.floor(availW / (COLS + 3.46));
+	  const cellByHeight = Math.floor(availH / (ROWS + 3.46));
+
+	  CELL = Math.min(68, Math.max(32, Math.min(cellByWidth, cellByHeight)));
+	  PW = Math.max(4, Math.round(CELL * 0.19));
+	  const MT = Math.round(CELL * 0.73);
+	  MAR = CELL + MT;
+	  TOP = CELL + MT;
+	}
+
+	function resizeCv() {
+	  calcLayout();
+	  cv.width  = COLS * CELL + MAR * 2;
+	  cv.height = ROWS * CELL + TOP * 2;
+
+	  // Escalar display: ancho llena #gr, alto proporcional
+	  const gr = document.getElementById('gr');
+	  const availW = gr.clientWidth;
+	  const scale  = availW / cv.width;
+
+	  cv.style.width  = availW + 'px';
+	  cv.style.height = Math.floor(cv.height * scale) + 'px';
+	  positionZen(); 
+	}
+
+    function startSlideAnim(type, fromR, fromC, toR, toC) {
+      slidingTile = {
+        type,
+        fromX: MAR + fromC * CELL, fromY: TOP + fromR * CELL,
+        toX: MAR + toC * CELL, toY: TOP + toR * CELL,
+        toR, toC,
+        startTime: performance.now(),
+        curX: MAR + fromC * CELL, curY: TOP + fromR * CELL
+      };
+      if (animRafId) cancelAnimationFrame(animRafId);
+      function loop() {
+        const t = Math.min((performance.now() - slidingTile.startTime) / ANIM_MS, 1);
+        const e = easeOut(t);
+        slidingTile.curX = slidingTile.fromX + (slidingTile.toX - slidingTile.fromX) * e;
+        slidingTile.curY = slidingTile.fromY + (slidingTile.toY - slidingTile.fromY) * e;
+        render();
+        if (t < 1) {
+          animRafId = requestAnimationFrame(loop);
+        } else {
+          slidingTile = null; animRafId = null;
+          render();
+          autoCheck();
+        }
+      }
+      animRafId = requestAnimationFrame(loop);
+    }
+
+    function buildPath(sR, sC, eR_, eC_) {
+      for (let a = 0; a < 2000; a++) {
+        const vis = new Set([sR * 1000 + sC]);
+        const path = [{ r: sR, c: sC }];
+        let r = sR, c = sC, ok = false;
+        for (let s = 0; s < ROWS * COLS * 6; s++) {
+          if (r === eR_ && c === eC_) { ok = true; break; }
+          const dirs = [0, 1, 2, 3].sort(() => Math.random() - .5);
+          let moved = false;
+          for (const d of dirs) {
+            const nr = r + DR[d], nc = c + DC[d];
+            if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+            const dn = Math.abs(nr - eR_) + Math.abs(nc - eC_);
+            const dc_ = Math.abs(r - eR_) + Math.abs(c - eC_);
+            if (dn > dc_ && Math.random() < 0.5) continue;
+            vis.add(nr * 1000 + nc); r = nr; c = nc; path.push({ r, c }); moved = true; break;
+          }
+          if (!moved) break;
+        }
+        if (ok) return path;
+      }
+      extR = entR;
+      const path = []; let r = sR, c = sC; path.push({ r, c });
+      while (c < eC_) { c++; path.push({ r, c }); }
+      while (r < eR_) { r++; path.push({ r, c }); }
+      while (r > eR_) { r--; path.push({ r, c }); }
+      return path;
+    }
+
+    function generatePuzzle() {
+      function biasedRow() {
+        const t = Math.random();
+        const biased = t < 0.5 ? Math.pow(t * 2, 0.45) * 0.3 : 1 - Math.pow((1 - t) * 2, 0.45) * 0.3;
+        return Math.round(biased * (ROWS - 1));
+      }
+      entR = Math.max(0, Math.min(ROWS - 1, biasedRow()));
+      extR = Math.max(0, Math.min(ROWS - 1, biasedRow()));
+      const path = buildPath(entR, 0, extR, COLS - 1);
+      const g = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      for (let i = 0; i < path.length; i++) {
+        const { r, c } = path[i];
+        const req = [];
+        if (i > 0) { const p = path[i - 1]; for (let d = 0; d < 4; d++) if (r + DR[d] === p.r && c + DC[d] === p.c) { req.push(d); break; } }
+        if (i < path.length - 1) { const nx = path[i + 1]; for (let d = 0; d < 4; d++) if (r + DR[d] === nx.r && c + DC[d] === nx.c) { req.push(d); break; } }
+        if (i === 0 && !req.includes(3)) req.push(3);
+        if (i === path.length - 1 && !req.includes(1)) req.push(1);
+        const mask = [0, 0, 0, 0]; req.forEach(d => mask[d] = 1);
+        g[r][c] = findPipe(mask) || findPipeWith(req);
+      }
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (!g[r][c]) g[r][c] = ALL[Math.floor(Math.random() * ALL.length)];
+      grid = g.map(row => row.map(t => { return { type: t }; }));
+      let tries = 0;
+      do { eR = Math.floor(Math.random() * ROWS); eC = Math.floor(Math.random() * COLS); tries++; }
+      while (tries < 100 && ((eR === entR && eC === 0) || (eR === extR && eC === COLS - 1)));
+      grid[eR][eC] = null;
+      function placePipeO() {
+        if (!PIPE_O_ENABLED) return;
+        const candidates = [];
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            if (r === eR && c === eC) continue;
+            if (r === entR && c === 0) continue;
+            if (r === extR && c === COLS - 1) continue;
+            candidates.push([r, c]);
+          }
+        }
+        const [pr, pc] = candidates[Math.floor(Math.random() * candidates.length)];
+        grid[pr][pc] = { type: 'pipe_O' };
+      }
+      placePipeO();
+    }
+
+    function doShuffle(n) {
+      for (let i = 0; i < n; i++) {
+        const opts = [];
+        for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) { const nr = eR + dr, nc = eC + dc; if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) opts.push([nr, nc]); }
+        const [nr, nc] = opts[Math.floor(Math.random() * opts.length)];
+        grid[eR][eC] = grid[nr][nc]; grid[nr][nc] = null; eR = nr; eC = nc;
+      }
+    }
+    function shuffleUntilUnsolved(n) { let a = 0; do { doShuffle(n); a++; } while (a < 20 && traceFlowFull() !== null); }
+
+    function doMoreShuffle() {
+      if (fTimer) { cancelAnimationFrame(fTimer); fTimer = null; }
+      shuffleUntilUnsolved(50);
+      moves = 0;
+      document.getElementById('mb').textContent = 'Movimientos: 0';
+      fPath = null; slidingTile = null;
+      render();
+    }
+
+    function traceFlowFull() {
+      const t0 = grid[entR] && grid[entR][0];
+      if (!t0 || !isOpen(t0.type, 3)) return null;
+      const parent = new Map();
+      const queue = [{ r: entR, c: 0, fromDir: 3 }];
+      const visited = new Set([entR * 1000 + 0]);
+      parent.set(entR * 1000 + 0, null);
+      while (queue.length) {
+        const { r, c, fromDir } = queue.shift();
+        const tile = grid[r][c]; if (!tile) continue;
+        for (let d = 0; d < 4; d++) {
+          if (d === fromDir || !isOpen(tile.type, d)) continue;
+          if (d === 1 && c === COLS - 1 && r === extR) {
+            const path = []; let k = r * 1000 + c;
+            while (k !== null) { path.unshift({ r: Math.floor(k / 1000), c: k % 1000 }); k = parent.get(k); }
+            return path;
+          }
+          const nr = r + DR[d], nc = c + DC[d];
+          if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+          const key = nr * 1000 + nc;
+          if (visited.has(key)) continue;
+          const nt = grid[nr][nc]; if (!nt || !isOpen(nt.type, opp(d))) continue;
+          visited.add(key); parent.set(key, r * 1000 + c); queue.push({ r: nr, c: nc, fromDir: opp(d) });
+        }
+      }
+      return null;
+    }
+
+    function newGame() {
+      acceptingMoves = false;
+      won = false;
+      moves = 0;
+      fPath = null;
+      fAnim = 0;
+      slidingTile = null;
+      if (fTimer) { cancelAnimationFrame(fTimer); fTimer = null; }
+      if (animRafId) { cancelAnimationFrame(animRafId); animRafId = null; }
+      document.getElementById('wo').classList.remove('show');
+      document.getElementById('lb').textContent = 'Nivel ' + level + ' · Tier ' + (getTier() + 1);
+      generatePuzzle();
+      shuffleUntilUnsolved(30 + level * 15);
+      render();
+      document.getElementById('msg').textContent = '👆 Toca un bloque y desliza hacia el espacio vacío';
+      acceptingMoves = true;
+    }
+
+    function getTier() {
+      return Math.min(Math.floor((level - 1) / LEVELS_PER_TIER), TIERS.length - 1);
+    }
+
+    function applyTier() {
+      const t = TIERS[getTier()];
+      ROWS = t.rows;
+      COLS = t.cols;
+      const tier = getTier() + 1;
+      if (tier <= 2) {
+        difficulty = 1;
+      } else {
+        difficulty = 1.5;
+      }
+    }
+
+    function changeLevel() {
+      level++;
+      applyTier();
+      const tier = getTier() + 1;
+      document.getElementById('lb').textContent = 'Nivel ' + level + ' · Tier ' + tier;
+      resizeCv();
+      newGame();
+    }
+
+    function nextLevel() {
+      zen += pendingZen;
+      pendingZen = 0;
+      document.getElementById('zen-display').innerHTML = '<span style="font-size:18px">\u{1F48E}</span> ' + zen;
+      changeLevel();
+    }
+
+    function tryMove(r, c) {
+      if (!acceptingMoves || won || animRafId) return false;
+      if (Math.abs(r - eR) + Math.abs(c - eC) !== 1) return false;
+      const tileType = grid[r][c].type;
+      const fromR = r, fromC = c;
+      const toR = eR, toC = eC;
+      grid[toR][toC] = grid[fromR][fromC];
+      grid[fromR][fromC] = null;
+      eR = fromR; eC = fromC;
+      moves++;
+      document.getElementById('mb').textContent = 'Movimientos: ' + moves;
+      playSfxMove();
+      startSlideAnim(tileType, fromR, fromC, toR, toC);
+      return true;
+    }
+
+    function autoCheck() {
+      if (!acceptingMoves || won || fTimer || slidingTile) return;
+      const path = traceFlowFull();
+      if (path && path.length > 0) {
+        acceptingMoves = false;
+        fPath = path;
+        fAnim = 0;
+        pathLength = path.length;
+        let lastTime = null;
+        const SPEED = 1000 / 75;
+        function flowLoop(ts) {
+          if (!lastTime) lastTime = ts;
+          fAnim += SPEED * (ts - lastTime) / 1000;
+          lastTime = ts;
+          render();
+          if (fAnim < fPath.length + FADE_DUR + 2) {
+            fTimer = requestAnimationFrame(flowLoop);
+          } else {
+            fTimer = null;
+            if (!won) {
+              won = true;
+              playSfxWin();
+              setTimeout(() => {
+                pendingZen = calcZen();
+                document.getElementById('wzen').textContent = '+ ' + pendingZen + ' ZEN';
+                document.getElementById('wm').textContent = moves;
+                document.getElementById('wp').textContent = pathLength;
+                document.getElementById('wo').classList.add('show');
+              }, 999);
+            }
+          }
+        }
+        fTimer = requestAnimationFrame(flowLoop);
+        document.getElementById('msg').innerHTML = '&#128167; Conexion exitosa!';
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    //  TÁCTIL Y EVENTOS MEJORADOS
+    // ═══════════════════════════════════════════
+    let touchStart = null;
+    let isDragging = false;
+
+    function getTouchCoord(touch) {
+      const rect = cv.getBoundingClientRect();
+      const scaleX = cv.width / rect.width;
+      const scaleY = cv.height / rect.height;
+      const canvasX = (touch.clientX - rect.left) * scaleX;
+      const canvasY = (touch.clientY - rect.top) * scaleY;
+      const col = Math.floor((canvasX - MAR) / CELL);
+      const row = Math.floor((canvasY - TOP) / CELL);
+      return { row, col, canvasX, canvasY };
+    }
+
+    function onTouchStart(e) {
+      e.preventDefault();
+      if (!acceptingMoves || won || animRafId) return;
+      const touch = e.touches[0];
+      const { row, col, canvasX, canvasY } = getTouchCoord(touch);
+      if (row >= 0 && row < ROWS && col >= 0 && col < COLS && grid[row][col]) {
+        touchStart = { row, col, x: canvasX, y: canvasY, time: Date.now() };
+        isDragging = false;
+        if (window.navigator && window.navigator.vibrate) {
+          window.navigator.vibrate(10);
+        }
+      }
+    }
+
+    function onTouchMove(e) {
+      if (!touchStart) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const { row, col, canvasX, canvasY } = getTouchCoord(touch);
+      const dx = Math.abs(canvasX - touchStart.x);
+      const dy = Math.abs(canvasY - touchStart.y);
+      if (dx > 15 || dy > 15) {
+        isDragging = true;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          if (dx > 20 && col === touchStart.col + 1 && row === touchStart.row) {
+            if (tryMove(row, col)) { touchStart = null; isDragging = false; }
+          } else if (dx > 20 && col === touchStart.col - 1 && row === touchStart.row) {
+            if (tryMove(row, col)) { touchStart = null; isDragging = false; }
+          }
+        } else {
+          if (dy > 20 && row === touchStart.row + 1 && col === touchStart.col) {
+            if (tryMove(row, col)) { touchStart = null; isDragging = false; }
+          } else if (dy > 20 && row === touchStart.row - 1 && col === touchStart.col) {
+            if (tryMove(row, col)) { touchStart = null; isDragging = false; }
+          }
+        }
+      }
+    }
+
+    function onTouchEnd(e) {
+      if (!touchStart) return;
+      e.preventDefault();
+      if (!isDragging) {
+        const touch = e.changedTouches[0];
+        const { row, col } = getTouchCoord(touch);
+        if (row >= 0 && row < ROWS && col >= 0 && col < COLS) {
+          tryMove(row, col);
+        }
+      }
+      touchStart = null;
+      isDragging = false;
+    }
+
+    function setupTouchEvents() {
+      cv.addEventListener('touchstart', onTouchStart, { passive: false });
+      cv.addEventListener('touchmove', onTouchMove, { passive: false });
+      cv.addEventListener('touchend', onTouchEnd);
+      cv.addEventListener('touchcancel', onTouchEnd);
+      cv.addEventListener('click', e => {
+        if (!acceptingMoves || won || animRafId) return;
+        const rect = cv.getBoundingClientRect();
+        const scaleX = cv.width / rect.width;
+        const scaleY = cv.height / rect.height;
+        const canvasX = (e.clientX - rect.left) * scaleX;
+        const canvasY = (e.clientY - rect.top) * scaleY;
+        const col = Math.floor((canvasX - MAR) / CELL);
+        const row = Math.floor((canvasY - TOP) / CELL);
+        if (row >= 0 && row < ROWS && col >= 0 && col < COLS) {
+          tryMove(row, col);
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════
+    //  RENDER
+    // ═══════════════════════════════════════════
+    function render() {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      const bgImg = IMG['frame_bg'];
+      if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+        ctx.drawImage(bgImg, 0, 0, cv.width, cv.height);
+      }
+	  
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(MAR, TOP, COLS * CELL, ROWS * CELL);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(5, 198, 122)';
+      ctx.lineWidth = 5;
+      ctx.setLineDash([]);
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.99)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 4;
+      ctx.shadowOffsetY = 4;
+      ctx.beginPath();
+      ctx.roundRect(MAR - 5, TOP - 5, COLS * CELL + 10, ROWS * CELL + 10, 6);
+      ctx.stroke();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.99)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = -4;
+      ctx.shadowOffsetY = -4;
+      ctx.beginPath();
+      ctx.roundRect(MAR - 5, TOP - 5, COLS * CELL + 10, ROWS * CELL + 10, 6);
+      ctx.stroke();
+      ctx.restore();
+
+      drawConnectorBlock(MAR - CELL, TOP + entR * CELL, 'IN', fPath && fAnim > 0);
+      drawConnectorBlock(MAR + COLS * CELL, TOP + extR * CELL, 'OUT', fPath && fAnim >= (fPath ? fPath.length : 999));
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, cv.width, cv.height);
+      ctx.roundRect(MAR - 5, TOP - 5, COLS * CELL + 10, ROWS * CELL + 10, 6);
+      ctx.clip('evenodd');
+      ctx.strokeStyle = 'rgba(5, 198, 122)';
+      ctx.lineWidth = 5;
+      ctx.setLineDash([]);
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.60)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = -4;
+      ctx.shadowOffsetY = -4;
+      ctx.beginPath();
+      ctx.roundRect(MAR - CELL - 5, TOP + entR * CELL - 5, CELL + 10, CELL + 10, 6);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, cv.width, cv.height);
+      ctx.roundRect(MAR - 5, TOP - 5, COLS * CELL + 10, ROWS * CELL + 10, 6);
+      ctx.clip('evenodd');
+      ctx.strokeStyle = 'rgba(5, 198, 122)';
+      ctx.lineWidth = 5;
+      ctx.setLineDash([]);
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.60)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 4;
+      ctx.shadowOffsetY = 4;
+      ctx.beginPath();
+      ctx.roundRect(MAR + COLS * CELL - 5, TOP + extR * CELL - 5, CELL + 10, CELL + 10, 6);
+      ctx.stroke();
+      ctx.restore();
+
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+        const x = MAR + c * CELL, y = TOP + r * CELL, tile = grid[r][c];
+        if (!tile) {
+          ctx.strokeStyle = 'rgba(239,159,39,0.15)';
+          ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+          ctx.strokeRect(x + GAP + 0.5, y + GAP + 0.5, CELL - GAP * 2 - 1, CELL - GAP * 2 - 1);
+          ctx.fillStyle = 'rgba(0, 2, 0, 0.7)';
+          ctx.fillRect(x + GAP, y + GAP, CELL - GAP * 2, CELL - GAP * 2);
+          ctx.setLineDash([]);
+          continue;
+        }
+        if (slidingTile && r === slidingTile.toR && c === slidingTile.toC) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+          ctx.fillRect(x + GAP, y + GAP, CELL - GAP * 2, CELL - GAP * 2);
+          continue;
+        }
+        const fi = fPath ? fPath.findIndex(p => p.r === r && p.c === c) : -1;
+        const lit = fPath && fi >= 0 && fi < fAnim;
+        const fadeOpacity = lit ? Math.min((fAnim - fi) / FADE_DUR, 1) : 1;
+        drawTexTile(x, y, tile.type, lit, fadeOpacity);
+      }
+
+      if (slidingTile) {
+        const { type, curX, curY } = slidingTile;
+        drawTexTile(curX, curY, type, false, 1);
+      }
+    }
+
+    function drawTexTile(x, y, type, lit, fadeOpacity = 1) {
+      const tex = PIPE_TEX[type];
+      if (tex) {
+        const normalImg = IMG[tex.img];
+        const hasNormal = normalImg && normalImg.complete && normalImg.naturalWidth > 0;
+        if (hasNormal) {
+          const rad = tex.deg * Math.PI / 180;
+          ctx.save();
+          ctx.translate(x + CELL / 2, y + CELL / 2);
+          ctx.rotate(rad);
+          ctx.drawImage(normalImg, -CELL / 2 + GAP, -CELL / 2 + GAP, CELL - GAP * 2, CELL - GAP * 2);
+          ctx.restore();
+          if (lit && fadeOpacity > 0 && tex.boldImg) {
+            const boldImg = IMG[tex.boldImg];
+            if (boldImg && boldImg.complete && boldImg.naturalWidth > 0) {
+              const degOffset = tex.boldDegOffset || 0;
+              const rad2 = (tex.deg + degOffset) * Math.PI / 180;
+              ctx.save();
+              ctx.globalAlpha = fadeOpacity;
+              ctx.translate(x + CELL / 2, y + CELL / 2);
+              ctx.rotate(rad2);
+              ctx.drawImage(boldImg, -CELL / 2 + GAP, -CELL / 2 + GAP, CELL - GAP * 2, CELL - GAP * 2);
+              ctx.restore();
+            }
+          }
+          return;
+        }
+      }
+
+      if (type === 'pipe_O') {
+        ctx.fillStyle = '#0a0f0a';
+        ctx.fillRect(x + GAP, y + GAP, CELL - GAP * 2, CELL - GAP * 2);
+        ctx.strokeStyle = '#1D9E75';
+        ctx.lineWidth = PW;
+        ctx.beginPath();
+        ctx.arc(x + CELL / 2, y + CELL / 2, CELL / 2 - PW - GAP - 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = '#1D9E75';
+        ctx.beginPath();
+        ctx.arc(x + CELL / 2, y + CELL / 2, PW / 2, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
+
+      ctx.fillStyle = lit ? 'rgba(0,2,0,0.30)' : '#3C3489';
+      ctx.fillRect(x + GAP, y + GAP, CELL - GAP * 2, CELL - GAP * 2);
+      const m = CONNECTS[type];
+      const cx = x + CELL / 2, cy = y + CELL / 2;
+      ctx.strokeStyle = lit ? FCOL : '#AFA9EC'; ctx.lineWidth = PW; ctx.lineCap = 'round';
+      if (m[0]) { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, y); ctx.stroke(); }
+      if (m[1]) { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x + CELL, cy); ctx.stroke(); }
+      if (m[2]) { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, y + CELL); ctx.stroke(); }
+      if (m[3]) { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, cy); ctx.stroke(); }
+      ctx.fillStyle = lit ? FCOL : '#AFA9EC'; ctx.beginPath(); ctx.arc(cx, cy, PW / 2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawConnectorBlock(x, y, label, lit) {
+      const isIN = label === 'IN';
+      const imgKey = isIN ? 'pipe_IN' : (lit ? 'bold_pipe_OUT' : 'pipe_OUT');
+      const img = IMG[imgKey];
+      const deg = isIN ? 90 : 270;
+      const rad = deg * Math.PI / 180;
+      if (img && img.complete && img.naturalWidth > 0) {
+        ctx.save();
+        ctx.translate(x + CELL / 2, y + CELL / 2);
+        ctx.rotate(rad);
+        ctx.drawImage(img, -CELL / 2 + GAP, -CELL / 2 + GAP, CELL - GAP * 2, CELL - GAP * 2);
+        ctx.restore();
+        return;
+      }
+      ctx.fillStyle = lit ? 'rgba(239,159,39,0.2)' : 'rgba(0,20,0,0.35)';
+      ctx.fillRect(x + GAP, y + GAP, CELL - GAP * 2, CELL - GAP * 2);
+      ctx.strokeStyle = lit ? '#EF9F27' : 'rgba(120,90,60,0.5)';
+      ctx.lineWidth = lit ? 2 : 1; ctx.setLineDash([]);
+      ctx.strokeRect(x + GAP, y + GAP, CELL - GAP * 2, CELL - GAP * 2);
+      const cy = y + CELL / 2;
+      ctx.strokeStyle = lit ? FCOL : '#1D9E75';
+      ctx.lineWidth = PW; ctx.lineCap = 'round';
+      if (isIN) {
+        ctx.beginPath(); ctx.moveTo(x + CELL / 4, cy); ctx.lineTo(x + CELL, cy); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.moveTo(x, cy); ctx.lineTo(x + CELL * 3 / 4, cy); ctx.stroke();
+      }
+      const lw = isIN ? 22 : 30, lh = 16;
+      ctx.fillStyle = '#854F0B';
+      ctx.beginPath(); ctx.roundRect(x + CELL / 2 - lw / 2, cy - lh / 2, lw, lh, 4); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Courier New';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(label, x + CELL / 2, cy);
+    }
+
+    // ═══════════════════════════════════════════
+    //  INIT
+    // ═══════════════════════════════════════════
+    function closeWelcome() {
+      document.getElementById('welcome-overlay').classList.add('hidden');
+      initAudio();
+    }
+
+    // Event listeners
+    document.getElementById('btn-newgame').onclick = () => newGame();
+    document.getElementById('btn-shuffle').onclick = () => doMoreShuffle();
+    document.getElementById('btn-nextlevel').onclick = () => changeLevel();
+    document.getElementById('bn').onclick = () => nextLevel();
+    document.getElementById('btn-start').onclick = () => closeWelcome();
+    document.getElementById('btn-mute').onclick = () => toggleMute();
+    document.getElementById('vol-slider').oninput = (e) => setVolume(e.target.value);
+    document.getElementById('btn-next').onclick = () => nextTrack();
+
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        resizeCv();
+        render();
+      }, 150);
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        resizeCv();
+        render();
+      }, 100);
+    });
+
+    // Inicialización
+    resizeCv();
+    loadImages(() => { 
+      newGame();
+      setupTouchEvents();
+    });
+  </script>
+</body>
+
+</html>
